@@ -313,14 +313,14 @@ const App = () => {
                                             : `Car ${car.id + 1}`;
                                     return (
                                         <li key={car.id} className="text-gray-200">
-                                            <span className="font-medium">{displayName}:</span>
-                                            RO Total: <span className="text-red-400">${car.roTotal.toFixed(2)}</span>,
-                                            Diagnostic Total: <span className="text-red-400">${car.diagnosticTotal.toFixed(2)}</span>,
-                                            Job Total: <span className="text-red-400">${car.jobTotal.toFixed(2)}</span>,
-                                            Eligible Diagnostic Pay: <span className="text-green-400">${car.eligibleDiagnosticPayment.toFixed(2)}</span>,
-                                            Eligible Rebate Pay: <span className="text-green-400">${car.eligibleRebatePayment.toFixed(2)}</span>,
-                                            Total Rebate Pay: <span className="font-bold text-green-400">${car.totalRebatePayment.toFixed(2)}</span>,
-                                            Customer Pay (10% Job): <span className="text-green-400">${car.customerPayPercentage.toFixed(2)}</span>,
+                                            <span className="font-medium">{displayName}:</span>{' '}
+                                            RO Total: <span className="text-red-400">${car.roTotal.toFixed(2)}</span>,{' '}
+                                            Diagnostic Total: <span className="text-red-400">${car.diagnosticTotal.toFixed(2)}</span>,{' '}
+                                            Job Total: <span className="text-red-400">${car.jobTotal.toFixed(2)}</span>,{' '}
+                                            Eligible Diagnostic Pay: <span className="text-green-400">${car.eligibleDiagnosticPayment.toFixed(2)}</span>,{' '}
+                                            Eligible Rebate Pay: <span className="text-green-400">${car.eligibleRebatePayment.toFixed(2)}</span>,{' '}
+                                            Total Rebate Pay: <span className="font-bold text-green-400">${car.totalRebatePayment.toFixed(2)}</span>,{' '}
+                                            Customer Pay (10% Job): <span className="text-green-400">${car.customerPayPercentage.toFixed(2)}</span>,{' '}
                                             Total Customer Pay: <span className="font-bold text-green-400">${car.totalCustomerPayment.toFixed(2)}</span>
                                             {car.loeNumber ? <span className="ml-2 text-green-400">LOE#: {car.loeNumber}</span> : <span className="ml-2 text-gray-500">(LOE# Not Entered)</span>}
                                         </li>
