@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mazda's Plus Cool Air Rebate Form</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- html2canvas CDN for capturing HTML as image -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        /* Custom font and dark mode base styles */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a202c; /* Dark background */
+            color: #e2e8f0; /* Light text color */
+        }
+        /* Focus styles for inputs */
+        input:focus, textarea:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(100, 149, 237, 0.5); /* Cornflower blue focus ring */
+            border-color: #6495ed; /* Cornflower blue border */
+        }
+        /* Style for the car entry blocks */
+        .car-entry {
+            border: 1px solid #4a5568; /* Darker gray border for separation */
+            padding: 1.5rem;
+            border-radius: 0.75rem; /* Rounded corners */
+            margin-bottom: 1.5rem; /* Space between car entries */
+            background-color: #2d3748; /* Slightly lighter dark background for entries */
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen p-4">
+    <div id="rebateFormContainer" class="bg-gray-800 p-8 rounded-xl shadow-2xl w-full max-w-2xl border border-gray-700">
+        <h1 class="text-3xl font-extrabold text-center text-white mb-8">Mazda's Plus Cool Air Rebate</h1>
+
+        <form id="rebateForm" class="space-y-6">
+            <!-- Container for multiple car entries -->
+            <div id="carEntriesContainer">
+                <!-- Car entries will be dynamically added here -->
+            </div>
+
+            <!-- Button to add another car -->
+            <button type="button" id="addCarBtn"
+                    class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-lg font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
+                Add Another Car
+            </button>
+
+            <hr class="border-gray-700 my-8">
+
+            <!-- Summary Section -->
+            <div class="bg-gray-700 p-6 rounded-xl shadow-inner border border-gray-600">
+                <h2 class="text-2xl font-bold text-white mb-4">Summary</h2>
+
+                <!-- Car Details List (Moved to top) -->
+                <h3 class="text-xl font-bold text-white mt-6 mb-3">Car Details List:</h3>
+                <ul id="carDetailsList" class="space-y-2 text-gray-300 mb-6">
+                    <!-- Car details will be dynamically added here -->
+                    <li class="text-sm text-gray-400 italic">No cars added yet.</li>
+                </ul>
+
+                <!-- Summary Totals (Moved to bottom) -->
+                <div class="space-y-3 pt-4 border-t border-gray-600">
+                    <p class="text-lg text-gray-200">Total Number of Cars: <span id="totalCarsCount" class="font-bold text-blue-400">0</span></p>
+                    <p class="text-lg text-gray-200">Grand Total Customer Payments: <span id="grandTotalPayments" class="font-bold text-green-400">$0.00</span></p>
+                    <p class="text-lg text-gray-200">Total Eligible Rebate Payments: <span id="totalEligibleRebatePayments" class="font-bold text-purple-400">$0.00</span></p>
+                    <p class="text-lg text-gray-200">Grand Total: <span id="grandTotalCombined" class="font-bold text-orange-400">$0.00</span></p>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" id="submitRebateBtn"
+                    class="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-lg font-semibold text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150 ease-in-out mt-8">
+                Submit All Rebates
+            </button>
+        </form>
+    </div>
+
+    <script>
+        const carEntriesContainer = document.getElementById('carEntriesContainer');
+        const addCarBtn = document.getElementById('addCarBtn');
+        const totalCarsCountSpan = document.getElementById('totalCarsCount');
+        const grandTotalPaymentsSpan = document.getElementById('grandTotalPayments');
+        const totalEligibleRebatePaymentsSpan = document.getElementById('totalEligibleRebatePayments');
+        const grandTotalCombinedSpan = document.getElementById('grandTotalCombined');
+        const carDetailsList = document.getElementById('carDetailsList');
+        const submitRebateBtn = document.getElementById('submitRebateBtn');
+        const rebateFormContainer = document.getElementById('rebateFormContainer');
+
+        let carCounter = 0;
+        const OVERAGE_THRESHOLD = 1500;
+        const REBATE_MAX_CAP = 1500;
+
+        /**
+         * Creates a new car entry HTML block.
+         * @param {number} index - The index for unique ID generation.
+         * @returns {string} The HTML string for a single car entry.
+         */
+        function createCarEntryHtml(index) {
+            return `
+                <div class="car-entry" data-car-index="${index}">
+                    <!-- RO NUMBER Field -->
+                    <div>
+                        <label for="roNumber_${index}" class="block text-sm font-medium text-gray-300 mb-1">RO NUMBER</label>
+                        <input type="text" id="roNumber_${index}" name="roNumber_${index}" placeholder="Enter RO Number"
+                               class="mt-1 block w-full px-4 py-2 border border-gray-600 rounded-lg shadow-sm bg-gray-700 text-white placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out">
+                    </div>
+
+                    <!-- Customer Name Field -->
+                    <div class="mt-4">
+                        <label for="customerName_${index}" class="block text-sm font-medium text-gray-300 mb-1">Customer Name</label>
+                        <input type="text" id="customerName_${index}" name="customerName_${index}" placeholder="Enter Customer Full Name"
+                               class="mt-1 block w-full px-4 py-2 border border-gray-600 rounded-lg shadow-sm bg-gray-700 text-white placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out">
+                    </div>
+
+                    <!-- Acceptance Number Checkbox (New) -->
+                    <div class="mt-4 flex items-center">
+                        <input type="checkbox" id="acceptanceNumber_${index}" name="acceptanceNumber_${index}"
+                               class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-600 rounded bg-gray-700">
+                        <label for="acceptanceNumber_${index}" class="ml-2 block text-sm font-medium text-gray-300">Acceptance Number</label>
+                    </div>
+
+                    <!-- RO Total Field (Now editable) -->
+                    <div class="mt-4">
+                        <label for="roTotal_${index}" class="block text-sm font-medium text-gray-300 mb-1">RO Total ($)</label>
+                        <input type="number" id="roTotal_${index}" name="roTotal_${index}" step="0.01" min="0" value="0.00"
+                               class="mt-1 block w-full px-4 py-2 border border-gray-600 rounded-lg shadow-sm bg-gray-700 text-white focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out">
+                    </div>
+
+                    <!-- Rebate Payment Field -->
+                    <div class="mt-4">
+                        <label for="rebatePayment_${index}" class="block text-sm font-medium text-gray-300 mb-1">Eligible Rebate Payment (Max $${REBATE_MAX_CAP.toFixed(2)})</label>
+                        <input type="text" id="rebatePayment_${index}" name="rebatePayment_${index}" value="0.00" readonly
+                               class="mt-1 block w-full px-4 py-2 border border-gray-600 rounded-lg bg-gray-700 text-gray-400 cursor-not-allowed shadow-sm sm:text-sm">
+                    </div>
+
+                    <!-- Customer Pay (10% of Combined Total, capped at $150) Field -->
+                    <div class="mt-4">
+                        <label for="customerPayPercentage_${index}" class="block text-sm font-medium text-gray-300 mb-1">Customer Pay (10% of RO Total, Capped at $${(OVERAGE_THRESHOLD * 0.10).toFixed(2)})</label>
+                        <input type="text" id="customerPayPercentage_${index}" name="customerPayPercentage_${index}" value="0.00" readonly
+                               class="mt-1 block w-full px-4 py-2 border border-gray-600 rounded-lg bg-gray-700 text-gray-400 cursor-not-allowed shadow-sm sm:text-sm">
+                    </div>
+
+                    <!-- Overage Field -->
+                    <div class="mt-4">
+                        <label for="overage_${index}" class="block text-sm font-medium text-gray-300 mb-1">Additional Customer Payment (RO Total - Capped 10% - Rebate)</label>
+                        <input type="text" id="overage_${index}" name="overage_${index}" value="0.00" readonly
+                               class="mt-1 block w-full px-4 py-2 border border-gray-600 rounded-lg bg-gray-700 text-gray-400 cursor-not-allowed shadow-sm sm:text-sm">
+                    </div>
+
+                    <!-- Total Customer Payment Field -->
+                    <div class="mt-4">
+                        <label for="totalCustomerPayment_${index}" class="block text-sm font-medium text-gray-300 mb-1">Total Customer Payment ($)</label>
+                        <input type="text" id="totalCustomerPayment_${index}" name="totalCustomerPayment_${index}" value="0.00" readonly
+                               class="mt-1 block w-full px-4 py-2 border border-gray-600 rounded-lg bg-gray-700 text-green-400 font-bold cursor-not-allowed shadow-sm sm:text-sm">
+                    </div>
+                </div>
+            `;
+        }
+
+        /**
+         * Adds a new car entry to the form.
+         */
+        function addCarEntry() {
+            const newCarDiv = document.createElement('div');
+            newCarDiv.innerHTML = createCarEntryHtml(carCounter);
+            carEntriesContainer.appendChild(newCarDiv.firstElementChild);
+
+            const roTotalInput = document.getElementById(`roTotal_${carCounter}`);
+            const customerNameInput = document.getElementById(`customerName_${carCounter}`);
+            const acceptanceNumberCheckbox = document.getElementById(`acceptanceNumber_${carCounter}`);
+
+            roTotalInput.addEventListener('input', updateAllCalculations);
+            customerNameInput.addEventListener('input', updateAllCalculations);
+            acceptanceNumberCheckbox.addEventListener('change', updateAllCalculations);
+
+            carCounter++;
+            updateAllCalculations();
+        }
+
+        /**
+         * Recalculates all car-specific values and updates the overall summary.
+         */
+        function updateAllCalculations() {
+            let grandTotalPayments = 0;
+            let totalEligibleRebatePayments = 0;
+            let totalCappedCustomerPayments = 0; // Still needed for individual car calculation, but not displayed in summary
+            const carsData = [];
+
+            const carEntryElements = document.querySelectorAll('.car-entry');
+            totalCarsCountSpan.textContent = carEntryElements.length;
+
+            if (carEntryElements.length === 0) {
+                carDetailsList.innerHTML = '<li class="text-sm text-gray-400 italic">No cars added yet.</li>';
+                grandTotalPaymentsSpan.textContent = '$0.00';
+                totalEligibleRebatePaymentsSpan.textContent = '$0.00';
+                grandTotalCombinedSpan.textContent = '$0.00';
+                return;
+            }
+
+            carEntryElements.forEach((carElement, index) => {
+                const roTotalInput = carElement.querySelector(`#roTotal_${index}`);
+                const rebatePaymentInput = carElement.querySelector(`#rebatePayment_${index}`);
+                const customerPayPercentageInput = carElement.querySelector(`#customerPayPercentage_${index}`);
+                const overageInput = carElement.querySelector(`#overage_${index}`);
+                const totalCustomerPaymentInput = carElement.querySelector(`#totalCustomerPayment_${index}`);
+                const customerNameInput = carElement.querySelector(`#customerName_${index}`);
+                const acceptanceNumberCheckbox = carElement.querySelector(`#acceptanceNumber_${index}`);
+
+                const roTotal = parseFloat(roTotalInput.value) || 0;
+                const customerNameFull = customerNameInput.value.trim();
+                const hasAcceptanceNumber = acceptanceNumberCheckbox.checked;
+
+                let displayName = '';
+                const nameParts = customerNameFull.split(' ').filter(part => part !== '');
+                if (nameParts.length > 1) {
+                    displayName = nameParts[nameParts.length - 1];
+                } else if (nameParts.length === 1) {
+                    displayName = nameParts[0];
+                } else {
+                    displayName = `Car ${index + 1}`;
+                }
+
+                const rebatePayment = Math.min(roTotal, REBATE_MAX_CAP);
+                rebatePaymentInput.value = rebatePayment.toFixed(2);
+
+                const customerPayPercentage = Math.min(roTotal * 0.10, OVERAGE_THRESHOLD * 0.10);
+                customerPayPercentageInput.value = customerPayPercentage.toFixed(2);
+
+                let additionalCustomerPayment = roTotal - customerPayPercentage - rebatePayment;
+                const overage = Math.max(0, additionalCustomerPayment);
+                overageInput.value = overage.toFixed(2);
+
+                const totalCustomerPayment = customerPayPercentage + overage;
+                totalCustomerPaymentInput.value = totalCustomerPayment.toFixed(2);
+
+                grandTotalPayments += totalCustomerPayment;
+                totalEligibleRebatePayments += rebatePayment;
+                totalCappedCustomerPayments += customerPayPercentage;
+
+                carsData.push({
+                    name: displayName,
+                    roTotal: roTotal,
+                    basePayment: customerPayPercentage,
+                    totalPayment: totalCustomerPayment,
+                    rebatePayment: rebatePayment,
+                    hasAcceptanceNumber: hasAcceptanceNumber
+                });
+            });
+
+            grandTotalPaymentsSpan.textContent = `$${grandTotalPayments.toFixed(2)}`;
+            totalEligibleRebatePaymentsSpan.textContent = `$${totalEligibleRebatePayments.toFixed(2)}`;
+            grandTotalCombinedSpan.textContent = `$${(grandTotalPayments + totalEligibleRebatePayments).toFixed(2)}`;
+
+            carDetailsList.innerHTML = '';
+            carsData.forEach(car => {
+                const listItem = document.createElement('li');
+                listItem.className = 'text-gray-200';
+                listItem.innerHTML = `
+                    <span class="font-medium">${car.name}:</span>
+                    RO Total: <span class="text-red-400">$${car.roTotal.toFixed(2)}</span>,
+                    Capped 10% RO: <span class="text-yellow-300">$${car.basePayment.toFixed(2)}</span>,
+                    Rebate Eligible: <span class="text-orange-400">$${car.rebatePayment.toFixed(2)}</span>,
+                    Total Customer Pay: <span class="font-bold text-green-400">$${car.totalPayment.toFixed(2)}</span>
+                    ${car.hasAcceptanceNumber ? '<span class="ml-2 text-green-500">(Accepted)</span>' : '<span class="ml-2 text-red-500">(Not Accepted)</span>'}
+                `;
+                carDetailsList.appendChild(listItem);
+            });
+        }
+
+        addCarBtn.addEventListener('click', addCarEntry);
+
+        document.addEventListener('DOMContentLoaded', () => {
+            addCarEntry();
+        });
+
+        submitRebateBtn.addEventListener('click', (event) => {
+            event.preventDefault();
+
+            html2canvas(rebateFormContainer, {
+                backgroundColor: '#1a202c',
+                scale: 2
+            }).then(canvas => {
+                const imageUrl = canvas.toDataURL('image/png');
+                const link = document.createElement('a');
+                link.href = imageUrl;
+                link.download = 'mazdas_plus_cool_air_rebate_form.png';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                console.log("Form captured as PNG and downloaded!");
+            }).catch(error => {
+                console.error("Error capturing form as image:", error);
+            });
+        });
+    </script>
+</body>
+</html>
